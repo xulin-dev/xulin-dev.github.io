@@ -13,11 +13,11 @@ export const SITE = {
 };
 
 export const NAV = [
+  { href: '/about/', label: '关于', key: 'about' },
+  { href: '/experience/', label: '经历', key: 'experience' },
   { href: '/log/', label: '学习专栏', key: 'log' },
   { href: '/posts/', label: '文章', key: 'posts' },
   { href: '/refs/', label: '素材', key: 'refs' },
-  { href: '/about/', label: '关于', key: 'about' },
-  { href: '/experience/', label: '经历', key: 'experience' },
 ];
 
 export const KINDS = {
