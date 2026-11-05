@@ -1,0 +1,163 @@
+---
+import type { MarkdownHeading } from 'astro';
+import BaseLayout from './BaseLayout.astro';
+import Badge from '../components/Badge.astro';
+import { formatDate, readingTime, type Kind } from '../lib/entries';
+import { getSeries } from '../data/series';
+
+interface PagerLink {
+  href: string;
+  title: string;
+}
+
+interface Props {
+  kind: Kind;
+  entry: {
+    id: string;
+    body?: string;
+    data: {
+      title: string;
+      description: string;
+      date: Date;
+      updated?: Date;
+      tags: string[];
+      series?: string;
+    };
+  };
+  headings: MarkdownHeading[];
+  prev?: PagerLink;
+  next?: PagerLink;
+}
+
+const { kind, entry, headings, prev, next } = Astro.props;
+const { title, description, date, updated, tags } = entry.data;
+
+const kindRoot = `/${kind}/`;
+const kindLabel = kind === 'posts' ? '文章' : kind === 'log' ? '学习专栏' : '素材';
+const seriesInfo = kind === 'log' && entry.data.series ? getSeries(entry.data.series) : undefined;
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const minutes = readingTime(entry.body ?? '');
+const updatedAt = updated && updated.valueOf() !== date.valueOf() ? updated : undefined;
+---
+
+<BaseLayout title={title} description={description} type="article">
+  <article class="article">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href="/">主页</a>
+      <span>/</span>
+      <a href={kindRoot}>{kindLabel}</a>
+      {seriesInfo && (
+        <>
+          <span>/</span>
+          <a href={`/log/series/${seriesInfo.slug}/`}>{seriesInfo.title}</a>
+        </>
+      )}
+    </nav>
+
+    <header class="article-head">
+      <Badge kind={kind} />
+      <h1>{title}</h1>
+      {description && <p class="article-desc">{description}</p>}
+      <div class="article-meta">
+        <time datetime={date.toISOString()}>{formatDate(date)}</time>
+        <span class="dot" aria-hidden="true"></span>
+        <span>约 {minutes} 分钟</span>
+        {updatedAt && (
+          <>
+            <span class="dot" aria-hidden="true"></span>
+            <span>更新于 {formatDate(updatedAt)}</span>
+          </>
+        )}
+      </div>
+      {tags.length > 0 && (
+        <ul class="tags article-tags" aria-label="标签">
+          {tags.map((tag) => (
+            <li>
+              <a href={`/search/?q=${encodeURIComponent(tag)}`}>{tag}</a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </header>
+
+    <div class:list={['article-layout', { 'has-toc': toc.length > 0 }]}>
+      <div class="prose">
+        <slot />
+      </div>
+
+      {toc.length > 1 && (
+        <aside class="toc" aria-label="目录">
+          <p class="toc-title">本页目录</p>
+          <ul>
+            {toc.map((heading) => (
+              <li class={`depth-${heading.depth}`}>
+                <a href={`#${heading.slug}`}>{heading.text}</a>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
+    </div>
+
+    {(prev || next) && (
+      <nav class="pager" aria-label="上一篇与下一篇">
+        {prev ? (
+          <a class="prev" href={prev.href}>
+            <span>← 上一篇</span>
+            <strong>{prev.title}</strong>
+          </a>
+        ) : (
+          <span></span>
+        )}
+        {next ? (
+          <a class="next" href={next.href}>
+            <span>下一篇 →</span>
+            <strong>{next.title}</strong>
+          </a>
+        ) : (
+          <span></span>
+        )}
+      </nav>
+    )}
+  </article>
+</BaseLayout>
+
+<script is:inline>
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+    if (!links.length) return;
+
+    var targets = links
+      .map(function (link) {
+        var id = decodeURIComponent(link.hash.slice(1));
+        var el = document.getElementById(id);
+        return el ? { link: link, el: el } : null;
+      })
+      .filter(Boolean);
+
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      var current = targets[0];
+      for (var i = 0; i < targets.length; i++) {
+        if (targets[i].el.getBoundingClientRect().top <= 120) current = targets[i];
+      }
+      links.forEach(function (link) {
+        link.classList.toggle('active', current && link === current.link);
+      });
+    }
+
+    window.addEventListener(
+      'scroll',
+      function () {
+        if (!ticking) {
+          ticking = true;
+          window.requestAnimationFrame(update);
+        }
+      },
+      { passive: true }
+    );
+    update();
+  })();
+</script>

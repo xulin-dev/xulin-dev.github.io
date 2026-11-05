@@ -1,0 +1,44 @@
+---
+import type { Job } from '../data/experience';
+
+interface Props {
+  jobs: Job[];
+}
+
+const { jobs } = Astro.props;
+---
+
+<ol class="timeline">
+  {jobs.map((job) => (
+    <li>
+      <div class="tl-period">
+        <span>{job.period}</span>
+        {job.current && <span class="now">进行中</span>}
+      </div>
+      <div>
+        <h3 class="tl-title">{job.title}</h3>
+        <p class="tl-org">{job.org}</p>
+        <p class="tl-summary">{job.summary}</p>
+
+        <div class="tl-projects">
+          {job.projects.map((project) => (
+            <div class="tl-project">
+              <p class="tl-project-head">
+                <span class="tl-project-name">{project.name}</span>
+                <span class="tl-project-meta">{project.meta}</span>
+              </p>
+              <p class="tl-project-summary">{project.summary}</p>
+              <ul class="tl-points">
+                {project.points.map((point) => <li>{point}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <ul class="chips">
+          {job.stack.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
+    </li>
+  ))}
+</ol>

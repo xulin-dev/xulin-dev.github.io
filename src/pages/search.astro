@@ -1,0 +1,190 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { KINDS } from '../consts';
+---
+
+<BaseLayout title="搜索" description="在徐淋的文章、专栏和素材里搜索。" noindex>
+  <header class="page-head">
+    <p class="kicker">Search</p>
+    <h1 class="page-title">搜索</h1>
+    <p class="page-desc">按标题、摘要、标签和正文搜索。按 <kbd>/</kbd> 可以直接聚焦输入框。</p>
+
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="M20 20l-3.6-3.6" stroke-linecap="round"></path>
+      </svg>
+      <input
+        id="search-input"
+        class="search-input"
+        type="search"
+        placeholder="输入关键词，比如 DMA、设备树、systemd"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="搜索关键词"
+      />
+    </div>
+
+    <div class="search-filters" id="search-filters" role="group" aria-label="按类型筛选">
+      <button class="chip-btn" type="button" data-kind="all" aria-pressed="true">全部</button>
+      {Object.entries(KINDS).map(([kind, meta]) => (
+        <button class="chip-btn" type="button" data-kind={kind} aria-pressed="false">{meta.label}</button>
+      ))}
+    </div>
+  </header>
+
+  <p class="search-status" id="search-status">正在载入索引…</p>
+  <ul class="search-results" id="search-results"></ul>
+  <p class="search-empty" id="search-empty" hidden>没有找到匹配的内容，换个关键词试试。</p>
+</BaseLayout>
+
+<script is:inline define:vars={{ base: import.meta.env.BASE_URL }}>
+  (function () {
+    var input = document.getElementById('search-input');
+    var status = document.getElementById('search-status');
+    var list = document.getElementById('search-results');
+    var empty = document.getElementById('search-empty');
+    var filters = document.getElementById('search-filters');
+    var items = [];
+    var kind = 'all';
+    var ready = false;
+
+    function esc(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function mark(text, query) {
+      var safe = esc(text);
+      if (!query) return safe;
+      var pattern = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      try {
+        return safe.replace(new RegExp('(' + pattern + ')', 'gi'), '<mark>$1</mark>');
+      } catch (e) {
+        return safe;
+      }
+    }
+
+    function kindLabel(value) {
+      return value === 'posts' ? '文章' : value === 'log' ? '学习专栏' : '素材';
+    }
+
+    function kindClass(value) {
+      return value === 'posts' ? 'kind-post' : value === 'log' ? 'kind-log' : 'kind-ref';
+    }
+
+    function score(item, query) {
+      var title = item.title.toLowerCase();
+      var description = (item.description || '').toLowerCase();
+      var tags = (item.tags || []).join(' ').toLowerCase();
+      var text = (item.text || '').toLowerCase();
+      var total = 0;
+
+      if (title === query) total += 100;
+      else if (title.indexOf(query) === 0) total += 60;
+      else if (title.indexOf(query) !== -1) total += 40;
+
+      if (tags.indexOf(query) !== -1) total += 20;
+      if (description.indexOf(query) !== -1) total += 15;
+      if (text.indexOf(query) !== -1) total += 5;
+
+      return total;
+    }
+
+    function render() {
+      if (!ready) return;
+      var query = input.value.trim().toLowerCase();
+      var results = items
+        .filter(function (item) {
+          if (kind !== 'all' && item.kind !== kind) return false;
+          if (!query) return true;
+          return (
+            item.title.toLowerCase().indexOf(query) !== -1 ||
+            (item.description || '').toLowerCase().indexOf(query) !== -1 ||
+            (item.tags || []).join(' ').toLowerCase().indexOf(query) !== -1 ||
+            (item.text || '').toLowerCase().indexOf(query) !== -1
+          );
+        })
+        .map(function (item) {
+          return { item: item, score: query ? score(item, query) : 0 };
+        })
+        .sort(function (a, b) {
+          if (query && b.score !== a.score) return b.score - a.score;
+          return String(b.item.date).localeCompare(String(a.item.date));
+        });
+
+      list.innerHTML = results
+        .map(function (entry) {
+          var item = entry.item;
+          return (
+            '<li><a class="search-result" href="' + item.url + '">' +
+            '<span class="badge ' + kindClass(item.kind) + '">' + kindLabel(item.kind) + '</span>' +
+            '<h3>' + mark(item.title, query) + '</h3>' +
+            '<p>' + mark(item.description || '', query) + '</p>' +
+            '</a></li>'
+          );
+        })
+        .join('');
+
+      empty.hidden = results.length > 0;
+      status.textContent = query
+        ? '“' + input.value.trim() + '” 找到 ' + results.length + ' 条'
+        : '共 ' + results.length + ' 条记录';
+    }
+
+    filters.addEventListener('click', function (event) {
+      var button = event.target.closest('button[data-kind]');
+      if (!button) return;
+      kind = button.dataset.kind;
+      Array.prototype.forEach.call(filters.querySelectorAll('button'), function (item) {
+        item.setAttribute('aria-pressed', String(item === button));
+      });
+      render();
+    });
+
+    var timer;
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        render();
+        var params = new URLSearchParams(window.location.search);
+        if (input.value.trim()) params.set('q', input.value.trim());
+        else params.delete('q');
+        var query = params.toString();
+        history.replaceState(null, '', window.location.pathname + (query ? '?' + query : ''));
+      }, 80);
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === '/' && document.activeElement !== input) {
+        event.preventDefault();
+        input.focus();
+      }
+      if (event.key === 'Escape' && document.activeElement === input) {
+        input.value = '';
+        render();
+        input.blur();
+      }
+    });
+
+    var initial = new URLSearchParams(window.location.search).get('q') || '';
+    input.value = initial;
+
+    fetch(base + 'search-index.json')
+      .then(function (response) {
+        if (!response.ok) throw new Error('index request failed');
+        return response.json();
+      })
+      .then(function (data) {
+        items = data;
+        ready = true;
+        render();
+      })
+      .catch(function () {
+        status.textContent = '索引加载失败，请刷新页面重试。';
+      });
+  })();
+</script>

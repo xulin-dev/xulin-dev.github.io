@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Badge from '../../components/Badge.astro';
+import { getRefs, formatDate } from '../../lib/entries';
+
+const refs = await getRefs();
+---
+
+<BaseLayout title="素材" description="速查表、命令清单和配置片段：不用通读，用到时能立刻找到。">
+  <header class="page-head">
+    <p class="kicker">Reference</p>
+    <h1 class="page-title">素材</h1>
+    <p class="page-desc">
+      速查表、命令清单和配置片段。不用通读，遇到问题时能立刻翻到需要的那一段就够了。
+    </p>
+    <div class="page-meta">
+      <span>{refs.length} 条</span>
+      {refs[0] && <span>最近更新 {formatDate(refs[0].data.date)}</span>}
+    </div>
+  </header>
+
+  <div class="ref-grid">
+    {refs.map((entry) => (
+      <a class="card" href={`/refs/${entry.id}/`}>
+        <div class="card-top">
+          <Badge kind="refs" />
+          <span class="muted" style="font-family:var(--mono);font-size:11px">{formatDate(entry.data.date)}</span>
+        </div>
+        <h3>{entry.data.title}</h3>
+        <p>{entry.data.description}</p>
+        <div class="card-foot">
+          <span>{entry.data.tags.slice(0, 3).join(' · ')}</span>
+          <span aria-hidden="true">→</span>
+        </div>
+      </a>
+    ))}
+  </div>
+</BaseLayout>

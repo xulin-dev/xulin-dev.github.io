@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getLog, formatDate, readingTime } from '../../../lib/entries';
+import { series } from '../../../data/series';
+
+export async function getStaticPaths() {
+  const log = await getLog();
+  return series.map((item) => ({
+    params: { slug: item.slug },
+    props: {
+      item,
+      entries: log
+        .filter((entry) => entry.data.series === item.slug)
+        .sort((a, b) => a.data.order - b.data.order),
+    },
+  }));
+}
+
+const { item, entries } = Astro.props;
+const latest = entries.reduce(
+  (acc, entry) => (acc && acc.data.date > entry.data.date ? acc : entry),
+  entries[0]
+);
+---
+
+<BaseLayout title={item.title} description={item.description}>
+  <header class="page-head">
+    <p class="kicker">Series</p>
+    <h1 class="page-title">{item.title}</h1>
+    <p class="page-desc">{item.description}</p>
+    <div class="page-meta">
+      <span>{entries.length} 篇</span>
+      {latest && <span>最近更新 {formatDate(latest.data.date)}</span>}
+      <a href="/log/">← 全部专栏</a>
+    </div>
+  </header>
+
+  <ul class="entries">
+    {entries.map((entry) => (
+      <li>
+        <a class="entry" href={`/log/${entry.id}/`}>
+          <span class="entry-date">{formatDate(entry.data.date)}</span>
+          <span class="entry-main">
+            <h3>{entry.data.title}</h3>
+            <p>{entry.data.description}</p>
+          </span>
+          <span class="entry-side">
+            <span>{readingTime(entry.body ?? '')} 分钟</span>
+            <span aria-hidden="true">→</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</BaseLayout>

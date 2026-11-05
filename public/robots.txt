@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://xulin-dev.github.io/sitemap.xml

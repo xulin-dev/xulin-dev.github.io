@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getLog, formatDate, readingTime } from '../../lib/entries';
+import { series } from '../../data/series';
+
+const log = await getLog();
+const grouped = series.map((item) => ({
+  ...item,
+  entries: log
+    .filter((entry) => entry.data.series === item.slug)
+    .sort((a, b) => a.data.order - b.data.order),
+}));
+const known = new Set(series.map((item) => item.slug));
+const others = log.filter((entry) => !known.has(entry.data.series));
+---
+
+<BaseLayout title="学习专栏" description="按主题成系列的学习记录：ZYNQ 从板到应用、Linux 应用开发手册。">
+  <header class="page-head">
+    <p class="kicker">Study Log</p>
+    <h1 class="page-title">学习专栏</h1>
+    <p class="page-desc">
+      按主题成系列地写。每个系列有一条主线，从第一块板子、第一次上电开始，按顺序读最顺。
+    </p>
+    <div class="page-meta">
+      <span>{series.length} 个系列</span>
+      <span>{log.length} 篇笔记</span>
+    </div>
+  </header>
+
+  {grouped.map((item) => (
+    <section class="series-block">
+      <div class="series-head">
+        <h2><a href={`/log/series/${item.slug}/`}>{item.title}</a></h2>
+        <p>{item.description}</p>
+        <span class="series-count">{item.entries.length} 篇</span>
+      </div>
+      <ul class="entries">
+        {item.entries.map((entry) => (
+          <li>
+            <a class="entry" href={`/log/${entry.id}/`}>
+              <span class="entry-date">{formatDate(entry.data.date)}</span>
+              <span class="entry-main">
+                <h3>{entry.data.title}</h3>
+                <p>{entry.data.description}</p>
+              </span>
+              <span class="entry-side">
+                <span>{readingTime(entry.body ?? '')} 分钟</span>
+                <span aria-hidden="true">→</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+
+  {others.length > 0 && (
+    <section class="series-block">
+      <div class="series-head">
+        <h2>其他笔记</h2>
+        <p>没有归入系列的零散记录。</p>
+        <span class="series-count">{others.length} 篇</span>
+      </div>
+      <ul class="entries">
+        {others.map((entry) => (
+          <li>
+            <a class="entry" href={`/log/${entry.id}/`}>
+              <span class="entry-date">{formatDate(entry.data.date)}</span>
+              <span class="entry-main">
+                <h3>{entry.data.title}</h3>
+                <p>{entry.data.description}</p>
+              </span>
+              <span class="entry-side"><span aria-hidden="true">→</span></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</BaseLayout>

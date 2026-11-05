@@ -1,0 +1,70 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../consts';
+---
+
+<BaseLayout title="关于" description="关于徐淋：Linux 应用开发、ZYNQ 嵌入式，以及这个站怎么组织。">
+  <header class="page-head">
+    <p class="kicker">About</p>
+    <h1 class="page-title">关于</h1>
+    <p class="page-desc">
+      徐淋，Linux 应用开发工程师。做 ZYNQ 板端应用，也做从硬件到用户态之间的那层胶水。
+    </p>
+  </header>
+
+  <div class="about-layout">
+    <div class="prose">
+      <p>
+        我是徐淋，做 Linux 应用开发和 ZYNQ 嵌入式开发。工作的大部分时间在板端：PL 侧的数据怎么进来、内核给用户态留下什么接口、应用怎么在现场一直活着。
+      </p>
+      <p>
+        喜欢把「能跑」变成「能说清楚」：为什么这么配、失败时停在哪、下次怎么更快定位。这个站基本就是这些记录的集合。
+      </p>
+
+      <h2>在做什么</h2>
+      <p>
+        目前在做 ZYNQ-7000 上的采集终端：AXI DMA 把 PL 的数据搬进 DDR，用户态通过 mmap 直接处理；界面用 Qt，服务交给 systemd 管。除此之外，还在补现场运维的部分：A/B 升级、回滚、日志和看门狗。
+      </p>
+      <p>
+        空闲时会写一些小工具，把重复的构建、烧写和排查步骤收进脚本。不是所有事情都值得自动化，但重复三次以上的，通常值得。
+      </p>
+
+      <h2>这个站</h2>
+      <p>
+        内容分三块，按「读完能不能用」来分：
+      </p>
+      <ul>
+        <li><strong>学习专栏</strong>：成系列的学习记录，从板子到手，从应用到运维；</li>
+        <li><strong>文章</strong>：单篇的完整问题记录，通常是一件事从头到尾；</li>
+        <li><strong>素材</strong>：速查表、命令清单、配置片段，写给自己也写给同事。</li>
+      </ul>
+      <p>
+        所有命令都在实际板子上跑过，但不同版本的 BSP、内核和工具链可能要先确认路径。遇到对不上的地方，以你手上的环境为准。
+      </p>
+
+      <h2>怎么联系</h2>
+      <p>
+        可以在 <a href={SITE.github} target="_blank" rel="noopener">GitHub</a> 上找到我{SITE.email && <>，或者发邮件到 <a href={`mailto:${SITE.email}`}>{SITE.email}</a></>}。
+      </p>
+    </div>
+
+    <aside class="about-aside">
+      <div class="aside-block">
+        <h2>现在</h2>
+        <p>ZYNQ 采集终端 · Linux 应用 · 现场运维。最近在整理设备树和 DMA 的笔记。</p>
+      </div>
+      <div class="aside-block">
+        <h2>联系</h2>
+        <ul>
+          {SITE.email && <li><a href={`mailto:${SITE.email}`}>Email</a></li>}
+          <li><a href={SITE.github} target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="/rss.xml">RSS</a></li>
+        </ul>
+      </div>
+      <div class="aside-block">
+        <h2>站点</h2>
+        <p>Astro 构建，手写样式，部署在 GitHub Pages。没有统计脚本，也没有评论系统。</p>
+      </div>
+    </aside>
+  </div>
+</BaseLayout>

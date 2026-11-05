@@ -1,0 +1,209 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Badge from '../components/Badge.astro';
+import ExperienceTimeline from '../components/ExperienceTimeline.astro';
+import { SITE } from '../consts';
+import { jobs, stackGroups } from '../data/experience';
+import { series } from '../data/series';
+import { getAll, getPosts, getLog, getRefs, formatDate, hrefFor } from '../lib/entries';
+
+const [all, posts, log, refs] = await Promise.all([getAll(), getPosts(), getLog(), getRefs()]);
+const counts = { posts: posts.length, log: log.length, refs: refs.length };
+const recent = all.slice(0, 5);
+const latestDate = all[0] ? formatDate(all[0].entry.data.date) : '—';
+
+const seriesWithCounts = series.map((item) => ({
+  ...item,
+  entries: log.filter((entry) => entry.data.series === item.slug),
+}));
+
+const scope = [
+  { label: '应用', text: 'C++ / Qt、采集管线、进程与线程' },
+  { label: '板端', text: 'ZYNQ-7000 · PetaLinux · 设备树与驱动接口' },
+  { label: '现场', text: 'systemd、A/B 升级、日志与看门狗' },
+];
+---
+
+<BaseLayout>
+  <section class="intro">
+    <p class="kicker">{SITE.role}</p>
+    <div class="intro-row">
+      <div>
+        <h1>{SITE.name}</h1>
+        <span class="intro-en">
+          <span>{SITE.nameEn}</span>
+          <span>Linux 应用</span>
+          <span>ZYNQ 嵌入式</span>
+          <span>板端调试</span>
+        </span>
+      </div>
+      <ul class="stats">
+        <li>
+          <a href="/log/">
+            <span class="stat-n">{counts.log}</span>
+            <span class="stat-label">学习专栏</span>
+          </a>
+        </li>
+        <li>
+          <a href="/posts/">
+            <span class="stat-n">{counts.posts}</span>
+            <span class="stat-label">文章</span>
+          </a>
+        </li>
+        <li>
+          <a href="/refs/">
+            <span class="stat-n">{counts.refs}</span>
+            <span class="stat-label">素材</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <p class="hero-meta">Linux 应用开发 · ZYNQ 嵌入式 · {SITE.since} 年至今</p>
+
+    <ul class="scope">
+      {scope.map((item) => (
+        <li>
+          <b>{item.label}</b>
+          <span>{item.text}</span>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <div class="fold-label">
+    <span class="label-pill">目录</span>
+  </div>
+
+  <details class="fold" id="about">
+    <summary class="fold-head">
+      <span class="fold-index">01</span>
+      <span class="fold-text">
+        <span class="fold-title">关于我</span>
+        <span class="fold-summary">Linux 应用、ZYNQ 板端、现场运维</span>
+      </span>
+      <span class="fold-meta">关于</span>
+      <span class="fold-caret" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+    </summary>
+    <div class="fold-body">
+      <div class="fold-inner">
+        <p class="fold-door">
+          做 Linux 应用开发和 ZYNQ 嵌入式开发，主要精力在板端：从 PL 的数据通路、内核接口，到用户态应用和现场运维。这个站记录工作里真正踩过的东西。
+        </p>
+      </div>
+      <div class="fold-foot">
+        <a href="/about/"><span>完整介绍与联系方式</span><span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </details>
+
+  <details class="fold" id="experience">
+    <summary class="fold-head">
+      <span class="fold-index">02</span>
+      <span class="fold-text">
+        <span class="fold-title">工作经历</span>
+        <span class="fold-summary">ZYNQ 采集终端 → 工业网关 Linux 应用</span>
+      </span>
+      <span class="fold-meta">{jobs.length} 段 · 2021—至今</span>
+      <span class="fold-caret" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+    </summary>
+    <div class="fold-body">
+      <div class="fold-inner">
+        <ExperienceTimeline jobs={jobs} />
+      </div>
+      <div class="fold-foot">
+        <a href="/experience/"><span>完整经历与技术栈</span><span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </details>
+
+  <details class="fold" id="recent" open>
+    <summary class="fold-head">
+      <span class="fold-index">03</span>
+      <span class="fold-text">
+        <span class="fold-title">最近记录</span>
+        <span class="fold-summary">专栏 {counts.log} · 文章 {counts.posts} · 素材 {counts.refs}</span>
+      </span>
+      <span class="fold-meta">最后 {latestDate}</span>
+      <span class="fold-caret" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+          <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+    </summary>
+    <div class="fold-body">
+      <div class="fold-inner">
+        <ul class="home-list">
+          {recent.map(({ kind, entry }) => (
+            <li>
+              <a class="home-item" href={hrefFor(kind, entry.id)}>
+                <span class="home-item-date">{formatDate(entry.data.date)}</span>
+                <span class="home-item-main">
+                  <span class="home-item-title">{entry.data.title}</span>
+                  <span class="home-item-desc">{entry.data.description}</span>
+                </span>
+                <span class="home-item-arrow" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="fold-foot">
+        <a href="/archive/"><span>全部 {counts.posts + counts.log + counts.refs} 条记录</span><span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </details>
+
+  <section class="section-block">
+    <div class="section-head">
+      <div>
+        <h2>学习专栏</h2>
+        <p>按主题成系列地写，一篇接一篇。</p>
+      </div>
+      <a class="section-more" href="/log/">全部专栏 →</a>
+    </div>
+    <div class="series-grid">
+      {seriesWithCounts.map((item) => (
+        <a class="series-card" href={`/log/series/${item.slug}/`}>
+          <div class="series-card-top">
+            <Badge kind="log" />
+            <span class="muted" style="font-family:var(--mono);font-size:11px">{item.entries.length} 篇</span>
+          </div>
+          <h3>{item.title}</h3>
+          <p>{item.description}</p>
+          <div class="series-card-foot">
+            <span>最近更新 {item.entries[0] ? formatDate(item.entries[0].data.date) : '—'}</span>
+            <span aria-hidden="true">→</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="section-block">
+    <div class="section-head">
+      <div>
+        <h2>技术栈</h2>
+        <p>平时真正会用的那部分，不追求列全。</p>
+      </div>
+    </div>
+    <div class="stack-board">
+      {stackGroups.map((group) => (
+        <div class="stack-row">
+          <b>{group.label}</b>
+          <ul class="chips">
+            {group.items.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

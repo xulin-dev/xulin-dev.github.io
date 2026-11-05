@@ -1,0 +1,12 @@
+---
+import { KINDS } from '../consts';
+
+interface Props {
+  kind: keyof typeof KINDS;
+}
+
+const { kind } = Astro.props;
+const meta = KINDS[kind];
+---
+
+<span class:list={['badge', meta.className]}>{meta.label}</span>

@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Badge from '../components/Badge.astro';
+import { getAll, formatDate, hrefFor, readingTime } from '../lib/entries';
+
+const all = await getAll();
+const counts = {
+  posts: all.filter((item) => item.kind === 'posts').length,
+  log: all.filter((item) => item.kind === 'log').length,
+  refs: all.filter((item) => item.kind === 'refs').length,
+};
+---
+
+<BaseLayout title="全部记录" description="徐淋的所有文章、学习专栏和素材，按时间排列。">
+  <header class="page-head">
+    <p class="kicker">Archive</p>
+    <h1 class="page-title">全部记录</h1>
+    <p class="page-desc">文章、专栏和素材放在一起，按时间从新到旧。按类型看的话，去对应的列表页会更清楚。</p>
+    <div class="page-meta">
+      <span>{all.length} 条</span>
+      <span>文章 {counts.posts}</span>
+      <span>专栏 {counts.log}</span>
+      <span>素材 {counts.refs}</span>
+    </div>
+  </header>
+
+  <ul class="entries">
+    {all.map(({ kind, entry }) => (
+      <li>
+        <a class="entry" href={hrefFor(kind, entry.id)}>
+          <span class="entry-date">{formatDate(entry.data.date)}</span>
+          <span class="entry-main">
+            <span class="entry-kind"><Badge kind={kind} /></span>
+            <h3>{entry.data.title}</h3>
+            <p>{entry.data.description}</p>
+          </span>
+          <span class="entry-side">
+            <span>{readingTime(entry.body ?? '')} 分钟</span>
+            <span aria-hidden="true">→</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</BaseLayout>

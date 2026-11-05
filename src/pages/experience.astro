@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ExperienceTimeline from '../components/ExperienceTimeline.astro';
+import { jobs, education, stackGroups } from '../data/experience';
+
+const startYear = 2021;
+---
+
+<BaseLayout title="经历" description="徐淋的工作经历：ZYNQ 采集终端、工业网关 Linux 应用，以及技术栈。">
+  <header class="page-head">
+    <p class="kicker">Experience</p>
+    <h1 class="page-title">经历</h1>
+    <p class="page-desc">
+      从工业网关到 ZYNQ 采集终端，主线是把 Linux 应用放到真实硬件上跑稳。下面写的是负责的部分和具体做过的事。
+    </p>
+    <div class="page-meta">
+      <span>{jobs.length} 段经历</span>
+      <span>{startYear}—至今</span>
+    </div>
+  </header>
+
+  <section class="section-block" style="margin-top:0">
+    <div class="section-head">
+      <div>
+        <h2>工作经历</h2>
+        <p>按时间从近到远。</p>
+      </div>
+    </div>
+    <ExperienceTimeline jobs={jobs} />
+  </section>
+
+  <section class="section-block">
+    <div class="section-head">
+      <div>
+        <h2>教育背景</h2>
+      </div>
+    </div>
+    <ol class="timeline">
+      <li>
+        <div class="tl-period">{education.period}</div>
+        <div>
+          <h3 class="tl-title">{education.title}</h3>
+          <p class="tl-org">{education.org}</p>
+          <p class="tl-summary">{education.summary}</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="section-block">
+    <div class="section-head">
+      <div>
+        <h2>技术栈</h2>
+        <p>按使用场景分组，不是清单。</p>
+      </div>
+    </div>
+    <div class="stack-board">
+      {stackGroups.map((group) => (
+        <div class="stack-row">
+          <b>{group.label}</b>
+          <ul class="chips">
+            {group.items.map((item) => <li>{item}</li>)}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,28 @@
+---
+import EntryLayout from '../../layouts/EntryLayout.astro';
+import { render } from 'astro:content';
+import { getLog } from '../../lib/entries';
+
+export async function getStaticPaths() {
+  const log = await getLog();
+  return log.map((entry, index) => ({
+    params: { slug: entry.id },
+    props: {
+      entry,
+      prev: log[index - 1]
+        ? { href: `/log/${log[index - 1].id}/`, title: log[index - 1].data.title }
+        : undefined,
+      next: log[index + 1]
+        ? { href: `/log/${log[index + 1].id}/`, title: log[index + 1].data.title }
+        : undefined,
+    },
+  }));
+}
+
+const { entry, prev, next } = Astro.props;
+const { Content, headings } = await render(entry);
+---
+
+<EntryLayout kind="log" entry={entry} headings={headings} prev={prev} next={next}>
+  <Content />
+</EntryLayout>
